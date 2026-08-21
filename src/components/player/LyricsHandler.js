@@ -45,11 +45,6 @@ export default function useLyricsHandler(t) {
         const requestId = ++activeLyricsRequestId;
         try {
             const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-            if (!showLyrics.value &&
-                (settings?.desktopLyrics !== 'on' && settings?.apiMode !== 'on' && settings?.statusBarLyrics !== 'on' && settings?.touchBar !== 'on')) {
-                return;
-            }
-
             console.log('[LyricsHandler] 请求歌词……');
             const lyricSearchResponse = await get(`/search/lyric?hash=${hash}`);
             if (requestId !== activeLyricsRequestId) {

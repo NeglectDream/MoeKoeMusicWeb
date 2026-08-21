@@ -158,10 +158,8 @@ onMounted(() => {
         applyCustomFont(savedConfig.font || '');
     }
     loadNavigationMode(savedConfig || {});
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        setTheme(savedTheme);
-    }
+    const savedTheme = localStorage.getItem('theme') || 'auto';
+    setTheme(savedTheme);
 
     // 添加网络状态监听
     window.addEventListener('online', handleOnline);
@@ -171,6 +169,14 @@ onMounted(() => {
 
     if (Notification.permission !== 'granted') {
         Notification.requestPermission();
+    }
+
+    if (savedConfig?.greetings === 'on') {
+        try {
+            const sfx = new Audio('/assets/sound/hello-kugou.mp3');
+            sfx.volume = 0.7;
+            sfx.play().catch(() => {});
+        } catch {}
     }
 
     replayPageRouteAnimation();

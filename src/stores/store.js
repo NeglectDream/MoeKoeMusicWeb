@@ -1,58 +1,45 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import { encryptedStorage } from '../utils/cryptoStorage';
 import { getApiBaseUrl } from '../utils/apiBaseUrl';
 
-// 用于设备注册的独立 axios 实例（不带拦截器，避免循环依赖）
-const registerDeviceApi = axios.create({
-    baseURL: getApiBaseUrl(),
-    timeout: 10000,
-});
+// 设备注册：调用后端 /register/dev 获取 dfid（酷狗用户类接口必需的设备标识）
+// 用原生 fetch 而非 httpClient，避免与 request.js 形成循环依赖
+async function fetchDfid() {
+    try {
+        const res = await fetch(`${getApiBaseUrl()}/register/dev`, { credentials: 'include' });
+        const json = await res.json();
+        return json?.data?.dfid || '';
+    } catch (e) {
+        console.warn('[store] fetchDfid failed:', e);
+        return '';
+    }
+}
 
 export const MoeAuthStore = defineStore('MoeData', {
     state: () => ({
-        UserInfo: null, // 用户信息
-        Config: null, // 配置信息
-        Device: null, // 设备信息
+        UserInfo: null, // 用户信息（登录后写入，加密持久化）
+        Device: { dfid: '' }, // 设备标识（持久化，避免每次刷新重新注册）
     }),
     actions: {
-        fetchConfig(key) {
-            if (!this.Config) return null;
-            const configItem = this.Config.find(item => item.key === key);
-            return configItem ? configItem.value : null;
-        },
-        async setData(data) {
-            if (data.UserInfo) this.UserInfo = data.UserInfo;
-            if (data.Config) this.Config = data.Config;
+        setData(data) {
+            if (data?.UserInfo) this.UserInfo = data.UserInfo;
         },
         clearData() {
-            this.UserInfo = null; // 清除用户信息
+            this.UserInfo = null;
         },
+        // 启动时注册设备拿 dfid；已存在则跳过（persist 恢复后直接命中）
         async initDevice() {
-            if (this.Device) return this.Device;
-            try {
-                const response = await registerDeviceApi.get('/register/dev');
-                const device = response?.data?.data;
-                if (device) {
-                    this.Device = device;
-                    return device;
-                }
-            } catch (error) {
-                console.error('Failed to register device:', error);
-            }
-            return null;
-        }
+            if (this.Device?.dfid) return;
+            const dfid = await fetchDfid();
+            if (dfid) this.Device = { dfid };
+        },
     },
     getters: {
-        isAuthenticated: (state) => !!state.UserInfo && !!state.UserInfo, // 是否已登录
+        isAuthenticated: (state) => !!state.UserInfo,
     },
     persist: {
-        enabled: true,
-        strategies: [
-            {
-                key: 'MoeData',
-                storage: localStorage,
-                paths: ['UserInfo', 'Config', 'Device'],
-            },
-        ],
+        key: 'MoeData',
+        storage: encryptedStorage,
+        pick: ['UserInfo', 'Device'],
     },
 });

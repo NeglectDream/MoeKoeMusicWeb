@@ -16,6 +16,9 @@
           <p class="result-publish-date">{{ song.PublishDate || song.PublishTime }}</p>
         </div>
       </div>
+      <button class="download-btn" :title="$t('xia-zai-ge-qu')" @click.stop="emit('download', song)">
+        <i class="fas fa-download"></i>
+      </button>
     </li>
   </ul>
 </template>
@@ -29,7 +32,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['song-click', 'song-contextmenu']);
+const emit = defineEmits(['song-click', 'song-contextmenu', 'download']);
 </script>
 
 <style lang="scss" scoped>
@@ -80,6 +83,31 @@ const emit = defineEmits(['song-click', 'song-contextmenu']);
   flex-direction: column;
   flex: 1;
   min-width: 0;
+}
+
+.download-btn {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--search-result-meta, #888);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s;
+
+  &:hover {
+    background: var(--color-primary-light, rgba(255, 105, 180, 0.12));
+    color: var(--primary-color, #ff69b4);
+  }
+}
+
+.result-item:hover .download-btn {
+  opacity: 1;
 }
 
 .result-meta {

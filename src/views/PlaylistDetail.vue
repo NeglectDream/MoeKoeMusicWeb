@@ -68,6 +68,9 @@
                                     <li @click="addPlaylistToQueue($event, true)" title="添加至播放列表">
                                         <i class="fas fa-add"></i>
                                     </li>
+                                    <li @click="downloadAllPlaylist" :title="$t('xia-zai-ge-dan')">
+                                        <i class="fas fa-download"></i>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -100,6 +103,7 @@
                         <div v-if="batchSelectionMode && isBatchMenuVisible && selectedTracks.length > 0"
                             class="batch-actions-menu">
                             <ul>
+                                <li @click="downloadSelected"><i class="fas fa-download"></i> {{ $t('xia-zai-xuan-zhong') }}({{ selectedTracks.length }})</li>
                                 <li @click="appendSelectedToQueue"><i class="fas fa-list"></i> 添加到播放列表 </li>
                                 <li @click="addSelectedToOtherPlaylist" v-if="MoeAuth.UserInfo?.userid"><i
                                         class="fas fa-folder-plus"></i> 添加到其他歌单</li>
@@ -242,6 +246,7 @@ import PlaylistSelectModal from '../components/PlaylistSelectModal.vue';
 import PageScrollbar from '../components/PageScrollbar.vue';
 import BackToTop from '../components/BackToTop.vue';
 import { get } from '../utils/request';
+import { downloadSongs } from '../utils/download';
 import { useRoute, useRouter } from 'vue-router';
 import { MoeAuthStore } from '../stores/store';
 import { useI18n } from 'vue-i18n';
@@ -307,6 +312,67 @@ const clearBatchSelection = () => {
     selectedTracks.value = [];
     lastSelectedIndex = -1;
     isBatchMenuVisible.value = false;
+};
+
+// 批量下载：选中曲目
+const downloadSelected = () => {
+    isBatchMenuVisible.value = false;
+    const selected = selectedTracks.value
+        .map(i => filteredTracks.value[i])
+        .filter(Boolean);
+    if (!selected.length) return;
+    startBatchDownload(selected);
+};
+
+// 下载整个歌单（拉取全部分页后批量下载）
+const downloadAllPlaylist = async () => {
+    isDropdownVisible.value = false;
+    const id = route.query.global_collection_id;
+    if (!id) return;
+    let allSongs = [];
+    for (let page = 1; page <= 4; page++) {
+        try {
+            const response = await get('/playlist/track/all', { id, page, pagesize: 300 });
+            if (response.status !== 1) break;
+            const list = response.data?.songs || [];
+            if (!list.length) break;
+            allSongs = allSongs.concat(formatPlaylistTracks(list));
+            if (list.length < 300) break;
+        } catch (error) {
+            console.error('[Download] 拉取歌单失败:', error);
+            break;
+        }
+    }
+    if (!allSongs.length) {
+        window.$message.error(t('xia-zai-shi-bai'));
+        return;
+    }
+    startBatchDownload(allSongs);
+};
+
+// 弹音质选择并执行批量下载
+const startBatchDownload = (songs) => {
+    if (songs.length > 100) {
+        window.$modal.alert(t('xia-zai-shu-liang-guo-duo'));
+    }
+    window.$qualityModal.open({
+        songs,
+        onConfirm: async (quality) => {
+            window.$modal.showLoading();
+            try {
+                const { success, failed } = await downloadSongs(songs, quality);
+                let msg = t('xia-zai-cheng-gong-shu', { n: success });
+                if (failed.length) msg += '，' + t('xia-zai-shi-bai-shu', { n: failed.length });
+                window.$message.success(msg);
+            } catch (error) {
+                console.error('[Download] 批量下载出错:', error);
+                window.$message.error(t('xia-zai-shi-bai'));
+            } finally {
+                window.$modal.hideLoading();
+                clearBatchSelection();
+            }
+        }
+    });
 };
 
 // 排序状态

@@ -5,12 +5,7 @@ import { MoeAuthStore } from '../../stores/store';
 
 export function useHelpers(t) {
   const isInputFocused = ref(false);
-  
-  // 环境检测
-  const isElectron = () => {
-    return typeof window !== 'undefined' && typeof window.electron !== 'undefined';
-  };
-  
+
   // 音量滚轮处理
   const handleVolumeScroll = (event, volume, changeVolume) => {
     event.preventDefault();
@@ -18,16 +13,16 @@ export function useHelpers(t) {
     volume.value = Math.min(Math.max(volume.value + delta * 10, 0), 100);
     changeVolume();
   };
-  
+
   // 检查输入框焦点
   const checkFocus = () => {
     isInputFocused.value = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
   };
-  
+
   // 键盘快捷键处理
   const handleKeyDown = (event, handlers, isInputFocused) => {
     if(isInputFocused) return;
-    
+
     switch (event.code) {
       case 'Space':
         event.preventDefault();
@@ -46,20 +41,7 @@ export function useHelpers(t) {
         break;
     }
   };
-  
-  // 桌面歌词控制
-  const desktopLyrics = () => {
-    if (!isElectron()) return;
-    
-    let savedConfig = JSON.parse(localStorage.getItem('settings')) || {};
-    if(!savedConfig?.desktopLyrics) savedConfig.desktopLyrics = 'off';
-    let action = savedConfig?.desktopLyrics === 'off' ? 'display-lyrics' : 'close-lyrics';
-    window.electron.ipcRenderer.send('desktop-lyrics-action', action);
-    savedConfig.desktopLyrics = action === 'display-lyrics' ? 'on' : 'off';
-    localStorage.setItem('settings', JSON.stringify(savedConfig));
-    window.electron.ipcRenderer.send('save-settings', JSON.parse(JSON.stringify(savedConfig)));
-  };
-  
+
   // 节流函数
   const throttle = (func, delay) => {
     let lastTime = 0;
@@ -71,7 +53,7 @@ export function useHelpers(t) {
       }
     };
   };
-  
+
   // 获取VIP
   const getVip = async () => {
     if (typeof MoeAuthStore !== 'function') return;
@@ -97,14 +79,12 @@ export function useHelpers(t) {
     }
     localStorage.setItem('lastVipRequestDate', todayKey);
   };
-  
+
   return {
     isInputFocused,
-    isElectron,
     handleVolumeScroll,
     checkFocus,
     handleKeyDown,
-    desktopLyrics,
     throttle,
     getVip
   };

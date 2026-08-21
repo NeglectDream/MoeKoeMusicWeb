@@ -6,9 +6,9 @@ import router from './router/router';
 import { formatMilliseconds, getCover, applyColorTheme, setTheme } from '../src/utils/utils';
 import ModalPlugin from './plugins/ModalPlugin';
 import MessagePlugin from './plugins/MessagePlugin';
+import QualitySelectPlugin from './plugins/QualitySelectPlugin';
 import i18n from './utils/i18n';
 import '@/assets/themes/dark.scss';
-import { registerSW } from 'virtual:pwa-register'
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -28,21 +28,11 @@ window.addEventListener('unhandledrejection', event => {
   // window.$modal.alert('系统错误');
 });
 
-if (!window.electron && !import.meta.env.DEV) {
-  registerSW({
-    onNeedRefresh() {
-      console.log('有新内容可用，请刷新页面')
-    },
-    onOfflineReady() {
-      console.log('应用已准备好离线工作')
-    }
-  })
-}
-
 app.use(pinia);
 app.use(router);
 app.use(i18n);
 app.use(ModalPlugin);
 app.use(MessagePlugin);
+app.use(QualitySelectPlugin);
 
 app.mount('#app');

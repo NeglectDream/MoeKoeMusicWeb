@@ -22,13 +22,15 @@
                 <!-- 综合搜索结果 -->
                 <ComplexSearchResults v-if="searchType === 'complex'" :data="complexSearchData"
                     :keyword="searchQuery" @song-play="handleComplexSongPlay"
+                    @song-download="handleSongDownload"
                     @song-contextmenu="showContextMenu" @artist-click="handleArtistClick"
                     @album-click="handleAlbumClick" @playlist-click="handlePlaylistClick"
                     @mv-click="handleMvClick" @program-click="handleProgramClick" />
 
                 <!-- 歌曲搜索结果 -->
                 <SongSearchList v-else-if="searchType === 'song'" :songs="searchResults"
-                    @song-click="handleSongClick" @song-contextmenu="showContextMenu" />
+                    @song-click="handleSongClick" @song-contextmenu="showContextMenu"
+                    @download="handleSongDownload" />
 
                 <!-- 歌手搜索结果 -->
                 <ArtistGrid v-else-if="searchType === 'author'" :artists="searchResults"
@@ -72,7 +74,9 @@ import ArtistGrid from '../components/search/ArtistGrid.vue';
 import MvGrid from '../components/search/MvGrid.vue';
 import ComplexSearchResults from '../components/search/ComplexSearchResults.vue';
 import { get } from '../utils/request';
+import { downloadSongWithQuality } from '../utils/download';
 import { openMvPlayer } from '../utils/utils';
+import i18n from '../utils/i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useActivatedWatch } from '../composables/useActivatedWatch';
 const route = useRoute();
@@ -151,6 +155,20 @@ const props = defineProps({
 
 const playSong = (hash, name, img, author) => {
     props.playerControl.addSongToQueue(hash, name, img, author);
+};
+
+const handleSongDownload = (song) => {
+    window.$qualityModal.open({
+        songs: [song],
+        onConfirm: async (quality) => {
+            const result = await downloadSongWithQuality(song, quality);
+            if (result.ok) {
+                window.$message.success(i18n.global.t('xia-zai-wan-cheng'));
+            } else {
+                window.$message.error(i18n.global.t('xia-zai-shi-bai'));
+            }
+        }
+    });
 };
 
 const handleSongClick = (song) => {

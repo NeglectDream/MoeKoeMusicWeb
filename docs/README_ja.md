@@ -11,10 +11,9 @@
     <a href="https://github.com/iAJue"><img src="https://img.shields.io/badge/%F0%9F%8E%89_Create_by_iAJue-with_Love_%E2%9D%A4-pink?style=flat-square" /></a>
   </p>
 <p align="center">
-オープンソースで簡潔で高ルックスのクールな犬のサードパーティクライアント
+オープンソースで簡潔で高ルックスのクールな犬のサードパーティ Web 音楽プレーヤー
 <br />
 <a href="https://github.com/iAJue/MoeKoeMusic/" target="blank"><strong>🌎 GitHub倉庫</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-<a href="https://github.com/iAJue/MoeKoeMusic/releases" target="blank"><strong>📦️インストールパッケージのダウンロード</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://MoeJue.cn" target="blank"><strong>💬 ブログへのアクセス</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://Music.MoeKoe.cn" target="blank"><strong>🏠 プロジェクトホームページ</strong></a>
 </p>
@@ -62,23 +61,15 @@
 ## 📢 Todo List
 - [x] 📺 MV再生をサポート
 - [x] 🌚 Light/Dark Mode 自動切り替え
-- [x] 👆 Touch Bar対応
 - [x] 🖥️ PWA対応
-- [x] ⌨️ ショートカットとグローバルショートカットのカスタマイズ
 - [x] 🤟 多言語サポート
-- [x] 📻 デスクトップ歌詞
-- [x] ⚙️ システムアーキテクチャの最適化
 - [x] 🎶 曲、歌/コレクション、キャンセル
 
 [更新履歴を見る](http://music.moekoe.cn/changelog.html)
 
 ## 📦️ インストール
 
-### 1. クライアントのインストール
-
-本プロジェクトの [Releases](https://github.com/iAJue/MoeKoeMusic/releases) ページにアクセスして、インストールパッケージをダウンロードしてください。
-
-### 2. WEB版のインストール（docker）
+### 1. WEB版のインストール（docker）
 
 * 注意：デプロイ後は、サーバーの対応ポートを開放する必要があります。または、リバースプロキシを使用してドメインアクセスを実現してください。
 
@@ -123,7 +114,7 @@
     ```
     
     上記の内容をコピーして、宝塔パネルのコンテナ編成に貼り付け、編成名をMoeKoeMusicとして、デプロイをクリックしてください。
-### 3. ワンクリックデプロイ
+### 2. ワンクリックデプロイ
 [![EdgeOne Pagesを使用してデプロイ](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?template=https://github.com/iAJue/moekoemusic&install-command=npm%20install&output-directory=dist&root-directory=.%2F&build-command=npm%20run%20build&env=VITE_APP_API_URL)
 
 環境変数（VITE_APP_API_URL）に自分のAPIアドレスを入力する必要があります。
@@ -150,111 +141,8 @@ npm run dev
 ```sh
 npm run build
 ```
-5.プロジェクトのコンパイル
-- Windows: 
-```sh
-npm run electron：build：win[デフォルトNSISインストールパッケージ]
-```
--	Linux: 
-```sh
-npm run electron：build：linux[デフォルトAppImageフォーマット]
-```
--	macOS: 
-```sh
-npm run electron：build：macos[デフォルトの双架構]
-```
-
 
 詳細なコマンドは、「package.json」ファイル「scripts」を参照してください。
-
-## 👷‍♂️ クライアントのコンパイル
-
-Releaseページであなたに適したデバイスのインストールパッケージが見つからない場合は、次の手順に従って自分のクライアントをパッケージ化することができます。
-
-1. [ノード.js](https://nodejs.org/en/)を選択し、` Node.js `バージョン>=18.0.0であることを確認します。
-
-2. を使用する `git clonehttps://github.com/iAJue/MoeKoeMusic.git`この倉庫をローカルにクローニングします。
-
-3. `npm install `を使用してプロジェクト依存性をインストールします。
-4. APIサービス端末のコンパイル
-- Windows:
-```sh
-npm run build:api:win
-```
-- Linux:
-```sh
-npm run build:api:linux
-```
-- macOS:
-```sh
-npm run build:api:macos
-```
-
-5. 次のコマンドを選択して適切なインストールパッケージをパッケージ化し、パッケージ化されたファイルは`/dist _ electron `ディレクトリの下にあります。詳細については、[electron-builderドキュメント](https://www.electron.build/cli)
-
-
-#### 1. パッケージmacOSプラットフォーム
-- 汎用のmacOSパッケージ(IntelとApple Siliconデュアルアーキテクチャ)：
-```
-npm run electron:build -- --mac --universal
-```
-- Intelアーキテクチャのみ：
-```
-npm run electron:build -- --mac --x64
-```
-- Apple Siliconアーキテクチャのみ：
-```
-npm run electron:build -- --mac --arm64
-```
-
-
-#### 2. Windowsプラットフォームのパッケージ化
-
-- デフォルトNSISインストールパッケージ(ほとんどのWindowsユーザー向け)：
-```
-npm run electron:build -- --win
-```
-- Windows用のEXEファイルとSquirrelインストールパッケージを作成するには：
-```
-npm run electron:build -- --win --ia32 --x64 --arm64 --target squirrel
-```
----ia 32は32ビットWindowsアーキテクチャです。
----x 64は64ビットWindowsアーキテクチャです。
----arm 64はARM Windowsアーキテクチャ(Surfaceなどのデバイス)です。
-
-- Windows用にポータブルEXEファイルを生成する(インストール不要)：
-```
-npm run electron:build -- --win --portable
-```
-#### 3. Linuxプラットフォームのパッケージ化
-- デフォルトのAppImageフォーマット(ほとんどのLinuxリリース用)：
-```
-npm run electron:build -- --linux
-```
-- snap(Ubuntuおよびsnapをサポートするリリース用)：
-```
-npm run electron:build -- --linux --target snap
-```
-- deb(Debian/Ubuntuシリーズ用)：
-```
-npm run electron:build -- --linux --target deb
-```
-- rpm(Red Hat/Fedoraシリーズ用)：
-```
-npm run electron:build -- --linux --target rpm
-```
-
-#### 4. すべてのプラットフォームをパッケージ化
-
-Windows、macOS、Linuxのインストールパッケージを同時に生成する必要がある場合は、次のコマンドを使用します。
-```
-npm run electron:build -- -mwl
-```
-
-#### 5. コンパイル設定のカスタマイズ
-
-必要に応じて他のオプションを追加して、パッケージをさらにカスタマイズすることができます。たとえば、x 64とarm 64スキーマを指定したり、異なるターゲットフォーマットを選択したりすることができます。
-
 
 ## ⭐ プロジェクトをサポート
 

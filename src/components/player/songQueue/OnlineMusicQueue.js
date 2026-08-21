@@ -1,73 +1,12 @@
 import { get } from '../../../utils/request';
 import { MoeAuthStore } from '../../../stores/store';
-
-const QUALITY_LEVELS = ['128', '320', 'flac', 'high', 'viper_atmos', 'viper_clear', 'viper_tape'];
-const QUALITY_LABELS = {
-    '128': '标准',
-    '320': '高品',
-    flac: 'FLAC',
-    high: 'Hi-Res',
-    viper_atmos: '全景声',
-    viper_clear: '超清',
-    viper_tape: '母带'
-};
-
-const normalizeQuality = (quality) => {
-    return QUALITY_LEVELS.includes(quality) ? quality : '128';
-};
-
-const getFallbackChain = (quality) => QUALITY_LEVELS.slice(0, QUALITY_LEVELS.indexOf(normalizeQuality(quality)) + 1).reverse();
-
-const getQualityLabel = (quality) => QUALITY_LABELS[quality] || '';
-
-const getPrivilegeVariants = (response) => {
-    const variants = [];
-
-    for (const item of response?.data || []) {
-        for (const variant of [item, ...(item?.relate_goods || [])]) {
-            if (!variant?.hash || variant?.level === 0 || !QUALITY_LEVELS.includes(variant?.quality)) continue;
-            variants.push(variant);
-        }
-    }
-
-    return variants;
-};
-
-const getQualityOptions = (response) => {
-    const qualityOptions = new Map();
-
-    for (const variant of getPrivilegeVariants(response)) {
-        if (qualityOptions.has(variant.quality)) continue;
-        qualityOptions.set(variant.quality, {
-            value: variant.quality,
-            hash: variant.hash,
-            label: getQualityLabel(variant.quality)
-        });
-    }
-
-    return [...qualityOptions.values()].sort((a, b) => QUALITY_LEVELS.indexOf(b.value) - QUALITY_LEVELS.indexOf(a.value));
-};
-
-const getPrivilegeCandidates = (qualityOptions, quality, originalHash) => {
-    const candidatesByQuality = new Map();
-
-    for (const option of qualityOptions) {
-        if (!candidatesByQuality.has(option.value)) {
-            candidatesByQuality.set(option.value, {
-                hash: option.hash,
-                quality: option.value
-            });
-        }
-    }
-
-    const fallbackChain = getFallbackChain(quality);
-    const candidates = fallbackChain.map(itemQuality => candidatesByQuality.get(itemQuality)).filter(Boolean);
-
-    return candidates.length > 0 ? candidates : fallbackChain.map(itemQuality => ({
-        hash: originalHash,
-        quality: itemQuality
-    }));
-};
+import {
+    normalizeQuality,
+    getFallbackChain,
+    getQualityLabel,
+    getQualityOptions,
+    getPrivilegeCandidates,
+} from '../../../utils/quality';
 
 export default function useOnlineMusicQueue(t, musicQueueStore, currentSong, timeoutId) {
     let activeSongRequestId = 0;
@@ -78,9 +17,6 @@ export default function useOnlineMusicQueue(t, musicQueueStore, currentSong, tim
         const requestId = ++activeSongRequestId;
         const isStaleRequest = () => requestId !== activeSongRequestId;
         const currentSongHash = currentSong.value.hash;
-        if (typeof window !== 'undefined' && typeof window.electron !== 'undefined') {
-            window.electron.ipcRenderer.send('set-tray-title', name + ' - ' + author);
-        }
 
         try {
             clearTimeout(timeoutId.value);

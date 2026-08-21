@@ -11,10 +11,9 @@
     <a href="https://github.com/iAJue"><img src="https://img.shields.io/badge/%F0%9F%8E%89_Create_by_iAJue-with_Love_%E2%9D%A4-pink?style=flat-square" /></a>
   </p>
 <p align="center">
-一款開源簡潔高顏值的酷狗協力廠商用戶端
+一款開源簡潔高顏值的酷狗協力廠商 Web 音樂播放器
 <br />
 <a href="https://github.com/iAJue/MoeKoeMusic/" target="blank"><strong>🌎 GitHub 倉庫</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-<a href="https://github.com/iAJue/MoeKoeMusic/releases" target="blank"><strong>📦️ 下載安裝包</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://MoeJue.cn" target="blank"><strong>💬 訪問部落格</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://Music.MoeKoe.cn" target="blank"><strong>🏠 項目主頁</strong></a>
 </p>
@@ -62,23 +61,15 @@
 ## 📢 Todo List
 - [x] 📺  支持MV播放
 - [x] 🌚 Light/Dark Mode  自動切換
-- [x] 👆  支持Touch Bar
 - [x] 🖥️  支持PWA
-- [x] ⌨️  全域快速鍵
 - [x] 🤟  多語言支持
-- [x] 📻  案頭歌詞
-- [x] ⚙️  系統架構優化
 - [x] 🎶  歌曲、歌單/收藏、取消
 
 [查看更新日誌](http://music.moekoe.cn/changelog.html)
 
 ## 📦️ 安裝
 
-### 1. 用戶端安裝
-
-訪問本項目的 [Releases](https://github.com/iAJue/MoeKoeMusic/releases) 頁面下載安裝包。
-
-### 2. WEB端安裝（docker）
+### 1. WEB端安裝（docker）
 
 * 注意：部署後請開放伺服器對應埠才可使用，或者使用反向代理實現功能變數名稱訪問。
 
@@ -123,7 +114,7 @@
     ```
     
     複製上面的內容，貼上到寶塔面板的容器編排裡面，編排名稱為MoeKoeMusic，點擊部署即可。
-### 3. 一鍵部署
+### 2. 一鍵部署
 [![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?template=https://github.com/iAJue/moekoemusic&install-command=npm%20install&output-directory=dist&root-directory=.%2F&build-command=npm%20run%20build&env=VITE_APP_API_URL)
 
 需在環境變數(VITE_APP_API_URL)中填寫自己的API地址
@@ -150,111 +141,8 @@ npm run dev
 ```sh
 npm run build
 ```
-5.編譯項目
-- Windows:
-```sh
-npm run electron:build:win [默認NSIS安裝包]
-```
-- Linux:
-```sh
-npm run electron:build:linux [默認AppImage格式]
-```
-- macOS:
-```sh
-npm run electron:build:macos [默認雙架構]
-```
-
 
 更多命令請查看`package.json`檔案`scripts`
-
-## 👷‍♂️  編譯用戶端
-
-如果在Release頁面沒有找到適合你的設備的安裝包的話，你可以根據下麵的步驟來打包自己的用戶端。
-
-1.安裝[Node.js](https://nodejs.org/en/)，並確保`Node.js`版本>= 18.0.0。
-
-2.使用`git clone https://github.com/iAJue/MoeKoeMusic.git `尅隆本倉庫到本地。
-
-3.使用`npm install`安裝項目依賴。
-4.編譯API服務端
-- Windows:
-```sh
-npm run build:api:win
-```
-- Linux:
-```sh
-npm run build:api:linux
-```
-- macOS:
-```sh
-npm run build:api:macos
-```
-
-5.選擇下列的命令來打包適合的你的安裝包，打包出來的檔案在`/dist_electron`目錄下。 瞭解更多資訊可訪問[electron-builder檔案](https://www.electron.build/cli)
-
-
-#### 1. 打包macOS平臺
--通用的macOS包(Intel和Apple Silicon雙架構)：
-```
-npm run electron:build -- --mac --universal
-```
--僅Intel架構：
-```
-npm run electron:build -- --mac --x64
-```
--僅Apple Silicon架構：
-```
-npm run electron:build -- --mac --arm64
-```
-
-
-#### 2. 打包Windows平臺
-
--默認NSIS安裝包(適合大多數Windows用戶)：
-```
-npm run electron:build -- --win
-```
--為Windows創建EXE檔案和Squirrel安裝包：
-```
-npm run electron:build -- --win --ia32 --x64 --arm64 --target squirrel
-```
----ia32為32比特Windows架構。
----x64為64比特Windows架構。
----arm64為ARM Windows架構(Surface等設備)。
-
--為Windows生成可擕式的EXE檔案(免安裝)：
-```
-npm run electron:build -- --win --portable
-```
-#### 3. 打包Linux平臺
--默認AppImage格式(適用於大多數Linux發行版本)：
-```
-npm run electron:build -- --linux
-```
-- snap(適用於Ubuntu和支持snap的發行版本)：
-```
-npm run electron:build -- --linux --target snap
-```
-- deb(適用於Debian/Ubuntu系列)：
-```
-npm run electron:build -- --linux --target deb
-```
-- rpm(適用於Red Hat/Fedora系列)：
-```
-npm run electron:build -- --linux --target rpm
-```
-
-#### 4. 打包所有平臺
-
-如果需要同時生成Windows、macOS和Linux的安裝包，可以使用以下命令：
-```
-npm run electron:build -- -mwl
-```
-
-#### 5. 自定義編譯設定
-
-您可以根據需要添加其他選項來進一步自定義打包，例如指定x64和arm64架構，或選擇不同的目標格式。
-
 
 ## ⭐ 支持項目
 

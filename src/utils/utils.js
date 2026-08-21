@@ -253,11 +253,7 @@ export const setTheme = (theme) => {
 };
 
 export const openRegisterUrl = (registerUrl) => {
-    if (window.electron) {
-        window.electron.ipcRenderer.send('open-url', registerUrl);
-    } else {
-        window.open(registerUrl, '_blank');
-    }
+    window.open(registerUrl, '_blank');
 };
 
 export const openMvPlayer = async (router, hash, title = '视频播放') => {
@@ -270,11 +266,6 @@ export const openMvPlayer = async (router, hash, title = '视频播放') => {
     const fullUrl = href.startsWith('#')
         ? `${base}${href}`
         : `${base}#${href.startsWith('/') ? href : `/${href}`}`;
-
-    if (window.electronAPI) {
-        await window.electronAPI.openMvWindow(fullUrl);
-        return;
-    }
 
     const width = 960;
     const height = 620;
@@ -300,24 +291,38 @@ export const share = (songName, id, type = 0, songDesc = '') => {
     if(MoeAuth.isAuthenticated) {
         userName = MoeAuth.UserInfo?.nickname || '萌音';
     };
-    // 客户端分享
-    let shareUrl = '';
-    if (window.electron) {
-        if(type == 0){
-            // 歌曲
-            shareUrl = `https://music.moekoe.cn/share/?hash=${id}`;
-        }else{
-            // 歌单
-            shareUrl = `moekoe://share?listid=${id}`;
-        }
-    } else {
-        //  Web / H5 逻辑
-        shareUrl = (window.location.host + '/#/') + (type == 0 ? `share/?hash=${id}` : `share?listid=${id}`);
-    }
+    const shareUrl = (window.location.host + '/#/') + (type == 0 ? `share/?hash=${id}` : `share?listid=${id}`);
     text = `你的好友@${userName}分享了${songDesc}《${songName}》给你,快去听听吧! ${shareUrl}`;
 
     navigator.clipboard.writeText(text);
     $message.success(
         i18n.global.t('kou-ling-yi-fu-zhi,kuai-ba-ge-qu-fen-xiang-gei-peng-you-ba')
     );
+};
+
+/**
+ * 打开歌词大屏窗口（Web 端桌面歌词等价物）。
+ */
+export const openLyricsWindow = () => {
+    const base = window.location.href.split('#')[0];
+    const fullUrl = `${base}#/lyrics`;
+    const width = 900;
+    const height = 720;
+    const left = Math.max(0, Math.round((window.screen.width - width) / 2));
+    const top = Math.max(0, Math.round((window.screen.height - height) / 2));
+    const features = `popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no`;
+    const popup = window.open(fullUrl, 'moekoe-lyrics', features);
+    if (popup) popup.focus?.();
+    return popup;
+};
+
+/**
+ * 跨窗口歌词通信 channel（主窗口 ↔ 歌词大屏）。
+ */
+let _lyricsChannel = null;
+export const getLyricsChannel = () => {
+    if (_lyricsChannel) return _lyricsChannel;
+    if (typeof BroadcastChannel === 'undefined') return null;
+    _lyricsChannel = new BroadcastChannel('moekoe-lyrics');
+    return _lyricsChannel;
 };

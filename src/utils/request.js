@@ -22,20 +22,12 @@ httpClient.interceptors.request.use(
         const userid = MoeAuth.UserInfo?.userid;
         const t1 = MoeAuth.UserInfo?.t1;
         const dfid = MoeAuth.Device?.dfid;
-        const mid = MoeAuth.Device?.mid;
-        const guid = MoeAuth.Device?.guid;
-        const serverDev = MoeAuth.Device?.serverDev;
-        const mac = MoeAuth.Device?.mac;
 
         const authParts = [];
-        if (token) authParts.push(`token=${(token)}`);
-        if (userid) authParts.push(`userid=${(userid)}`);
-        if (dfid) authParts.push(`dfid=${(dfid)}`);
-        if (t1) authParts.push(`t1=${(t1)}`);
-        if (mid) authParts.push(`KUGOU_API_MID=${(mid)}`);
-        if (guid) authParts.push(`KUGOU_API_GUID=${(guid)}`);
-        if (serverDev) authParts.push(`KUGOU_API_DEV=${(serverDev)}`);
-        if (mac) authParts.push(`KUGOU_API_MAC=${(mac)}`);
+        if (token) authParts.push(`token=${token}`);
+        if (userid) authParts.push(`userid=${userid}`);
+        if (t1) authParts.push(`t1=${t1}`);
+        if (dfid) authParts.push(`dfid=${dfid}`);
 
         if (authParts.length > 0) {
             config.headers = {

@@ -79,8 +79,6 @@ onMounted(() => {
 });
 
 const handleShareRoute = async (onCleanup) => {
-    if (window.electron) return;
-
     let cancelled = false;
     await new Promise(resolve => {
         const timer = setTimeout(resolve, 1000);

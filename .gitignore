@@ -9,7 +9,6 @@ lerna-debug.log*
 .history
 
 node_modules
-dist_electron
 dist
 dist-ssr
 *.local
@@ -33,5 +32,3 @@ dev-dist/*
 pnpm-lock.yaml
 pnpm-workspace.yaml
 vite.config.js*
-
-plugins/extensions/*

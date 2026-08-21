@@ -11,10 +11,9 @@
     <a href="https://github.com/iAJue"><img src="https://img.shields.io/badge/%F0%9F%8E%89_Create_by_iAJue-with_Love_%E2%9D%A4-pink?style=flat-square" /></a>
   </p>
   <p align="center">
-    Открытый, лаконичный и красивый сторонний клиент для Kugou
+    Открытый, лаконичный и красивый сторонний Web-плеер для Kugou
     <br />
     <a href="https://github.com/iAJue/MoeKoeMusic/" target="blank"><strong>GitHub</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="https://github.com/iAJue/MoeKoeMusic/releases" target="blank"><strong>Скачать</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="https://MoeJue.cn" target="blank"><strong>Блог</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
     <a href="https://Music.MoeKoe.cn" target="blank"><strong>Сайт проекта</strong></a>
   </p>
@@ -62,23 +61,15 @@
 ## 📢 Список задач
 - [x] 📺 Поддержка воспроизведения MV
 - [x] 🌚 Автоматическое переключение Light/Dark Mode
-- [x] 👆 Поддержка Touch Bar
 - [x] 🖥️ Поддержка PWA
-- [x] ⌨️ Глобальные горячие клавиши
 - [x] 🤟 Мультиязычность
-- [x] 📻 Текст песни на рабочем столе
-- [x] ⚙️ Оптимизация архитектуры
 - [x] 🎶 Добавление/удаление песен и плейлистов в избранное
 
 [Посмотреть журнал изменений](http://music.moekoe.cn/changelog.html)
 
 ## 📦️ Установка
 
-### 1. Установка клиента
-
-Скачайте установочный пакет на странице [Releases](https://github.com/iAJue/MoeKoeMusic/releases).
-
-### 2. WEB-версия (Docker)
+### 1. WEB-версия (Docker)
 
 * Примечание: после развёртывания откройте соответствующий порт на сервере или используйте обратный прокси.
 
@@ -120,7 +111,7 @@
           - "6521:6521"  # API
 
     ```
-### 3. Развертывание в один клик
+### 2. Развертывание в один клик
 [![Развернуть на EdgeOne Pages](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?template=https://github.com/iAJue/moekoemusic&install-command=npm%20install&output-directory=dist&root-directory=.%2F&build-command=npm%20run%20build&env=VITE_APP_API_URL)
 
 Укажите свой API-адрес в переменной окружения (VITE_APP_API_URL)
@@ -147,109 +138,8 @@ npm run dev
 ```sh
 npm run build
 ```
-5. Компиляция
-  - Windows:
-  ```sh
-  npm run electron:build:win
-  ```
-  - Linux:
-  ```sh
-  npm run electron:build:linux
-  ```
-  - macOS:
-  ```sh
-  npm run electron:build:macos
-  ```
-
 
 Больше команд в файле `package.json` в секции `scripts`
-
-## 👷‍♂️ Сборка клиента
-
-Если на странице Release нет подходящего пакета для вашего устройства, вы можете собрать клиент самостоятельно.
-
-1. Установите [Node.js](https://nodejs.org/en/) версии >= 18.0.0.
-
-2. Клонируйте репозиторий: `git clone https://github.com/iAJue/MoeKoeMusic.git`
-
-3. Установите зависимости: `npm install`
-4. Скомпилируйте API-сервер
-    - Windows:
-        ```sh
-        npm run build:api:win
-        ```
-    - Linux:
-        ```sh
-        npm run build:api:linux
-        ```
-    - macOS:
-      ```sh
-      npm run build:api:macos
-      ```
-
-5. Выберите команду для сборки. Результат будет в директории `/dist_electron`. Подробнее: [electron-builder](https://www.electron.build/cli)
-
-
-#### 1. macOS
-   - Универсальный пакет (Intel и Apple Silicon):
-   ```
-   npm run electron:build -- --mac --universal
-   ```
-   - Только Intel:
-   ```
-   npm run electron:build -- --mac --x64
-   ```
-   - Только Apple Silicon:
-   ```
-   npm run electron:build -- --mac --arm64
-   ```
-
-
-#### 2. Windows
-
-   - NSIS-установщик (для большинства пользователей):
-   ```
-   npm run electron:build -- --win
-   ```
-   - EXE + Squirrel:
-   ```
-   npm run electron:build -- --win --ia32 --x64 --arm64 --target squirrel
-   ```
-   - Портативная версия (без установки):
-   ```
-   npm run electron:build -- --win --portable
-   ```
-#### 3. Linux
-   - AppImage (для большинства дистрибутивов):
-   ```
-   npm run electron:build -- --linux
-   ```
-   - snap (Ubuntu и совместимые):
-   ```
-   npm run electron:build -- --linux --target snap
-   ```
-   - deb (Debian/Ubuntu):
-   ```
-   npm run electron:build -- --linux --target deb
-   ```
-   - rpm (Red Hat/Fedora):
-   ```
-   npm run electron:build -- --linux --target rpm
-   ```
-   - ARM64:
-   ```
-   npm run build:api:linux-aarch64
-   npm run electron:build:linux-aarch64
-   ```
-
-#### 4. Все платформы сразу
-  ```
-  npm run electron:build -- -mwl
-  ```
-
-#### 5. Дополнительные настройки
-
-Вы можете добавить другие опции для настройки сборки, например, указать архитектуру x64 или arm64.
 
 ## ⭐ Поддержать проект
 

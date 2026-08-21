@@ -61,7 +61,7 @@
                 </button>
             </div>
             <div class="extra-controls">
-                <button class="extra-btn" :title="t('zhuo-mian-ge-ci')" v-if="isElectron()" @click="desktopLyrics"><i
+                <button class="extra-btn" :title="t('zhuo-mian-ge-ci')" @click="openLyricsWindow"><i
                         class="fas">词</i></button>
                 <div class="playback-speed">
                     <button class="extra-btn speed-btn" @click="toggleSpeedMenu" :title="t('bo-fang-su-du')">
@@ -82,6 +82,8 @@
                         class="fas fa-add"></i></button>
                 <button class="extra-btn" :title="t('fen-xiang-ge-qu')" @click="share(currentSong.name, currentSong.hash)"><i
                         class="fas fa-share"></i></button>
+                <button v-if="currentSong?.hash && !isLocalSong(currentSong)" class="extra-btn"
+                    :title="t('xia-zai-ge-qu')" @click="downloadCurrentSong"><i class="fas fa-download"></i></button>
                 <div class="playback-mode">
                     <button class="extra-btn" @click="togglePlaybackMode">
                         <i v-if="currentPlaybackModeIndex != '2'" :class="currentPlaybackMode.icon"
@@ -283,8 +285,9 @@ import PlaylistSelectModal from './PlaylistSelectModal.vue';
 import QueueList from './QueueList.vue';
 import FullscreenLyricsSettings from './FullscreenLyricsSettings.vue';
 import { useRouter } from 'vue-router';
-import { getCover, getAudioOutputDeviceSignature, share } from '../utils/utils';
+import { getCover, getAudioOutputDeviceSignature, share, openLyricsWindow, getLyricsChannel } from '../utils/utils';
 import { get } from '../utils/request';
+import { downloadSongs } from '../utils/download';
 
 // 从统一入口导入所有模块
 import {
@@ -349,7 +352,7 @@ const isDragging = ref(false);
 const lyricsFlag = ref(false);
 
 // 辅助函数
-const { isElectron, throttle, getVip, desktopLyrics } = useHelpers(t);
+const { throttle, getVip } = useHelpers(t);
 
 // Easter Egg 相关
 const easterEggImages = [
@@ -453,70 +456,47 @@ const updateCurrentTime = throttle(() => {
 
     const savedConfig = JSON.parse(localStorage.getItem('settings') || '{}');
     const hasLyricsData = Array.isArray(lyricsData.value) && lyricsData.value.length > 0;
-    
-    const statusBarLyricsEnabled = savedConfig?.statusBarLyrics === 'on';
-    const desktopLyricsEnabled = savedConfig?.desktopLyrics === 'on';
 
     if (audio) {
         if (hasLyricsData) {
             highlightCurrentChar(audio.currentTime, !lyricsFlag.value);
         }
 
-        // 只在有歌曲且正在播放时才发送 IPC
-        if (isElectron() && audio.src && playing.value && (desktopLyricsEnabled || statusBarLyricsEnabled)) {
-            const currentLine = hasLyricsData ? getCurrentLineText(audio.currentTime) : '';
-            
-            // 只有歌词真正变化时才发送（防抖）
-            const currentTimeMs = Date.now();
-            if (currentLine !== lastSentLyric || currentTimeMs - lastSentTime > 1000) {
-                lastSentLyric = currentLine;
-                lastSentTime = currentTimeMs;
-                
-                // 使用 JSON 序列化确保对象可以被克隆
-                try {
-                    const lyricsPayload = hasLyricsData ? JSON.parse(JSON.stringify(lyricsData.value)) : [];
-                    window.electron.ipcRenderer.send('lyrics-data', {
-                        currentTime: audio.currentTime,
-                        playing: playing.value,
-                        lyricsData: lyricsPayload,
-                        currentSongHash: currentSong.value?.hash || '',
-                        currentLyric: currentLine
-                    });
-                } catch (e) {
-                    // 如果序列化失败，只发送必要的数据
-                    window.electron.ipcRenderer.send('lyrics-data', {
-                        currentTime: audio.currentTime,
-                        playing: playing.value,
-                        lyricsData: [],
-                        currentSongHash: currentSong.value?.hash || '',
-                        currentLyric: currentLine
-                    });
+        // 向歌词大屏窗口广播歌词数据（BroadcastChannel）
+        if (audio.src && playing.value) {
+            const channel = getLyricsChannel();
+            if (channel) {
+                const currentLine = hasLyricsData ? getCurrentLineText(audio.currentTime) : '';
+                const currentTimeMs = Date.now();
+                if (currentLine !== lastSentLyric || currentTimeMs - lastSentTime > 1000) {
+                    lastSentLyric = currentLine;
+                    lastSentTime = currentTimeMs;
+                    try {
+                        const lyricsPayload = hasLyricsData ? JSON.parse(JSON.stringify(lyricsData.value)) : [];
+                        channel.postMessage({
+                            type: 'lyrics-data',
+                            currentTime: audio.currentTime,
+                            playing: playing.value,
+                            lyricsData: lyricsPayload,
+                            currentSongHash: currentSong.value?.hash || '',
+                            currentLyric: currentLine
+                        });
+                    } catch (e) {
+                        channel.postMessage({
+                            type: 'lyrics-data',
+                            currentTime: audio.currentTime,
+                            playing: playing.value,
+                            lyricsData: [],
+                            currentSongHash: currentSong.value?.hash || '',
+                            currentLyric: currentLine
+                        });
+                    }
                 }
             }
         }
-        
-        if (isElectron() && audio.src && playing.value && savedConfig?.apiMode === 'on') {
-            try {
-                const serverLyricsPayload = hasLyricsData && originalLyrics.value ? JSON.parse(JSON.stringify(originalLyrics.value)) : [];
-                const currentSongPayload = currentSong.value ? JSON.parse(JSON.stringify(currentSong.value)) : null;
-                window.electron.ipcRenderer.send('server-lyrics', {
-                    currentTime: audio.currentTime,
-                    lyricsData: serverLyricsPayload,
-                    currentSong: currentSongPayload,
-                    duration: audio.duration
-                });
-            } catch (e) {
-                // 序列化失败时跳过
-            }
-        }
-        
-        if (isElectron() && audio.src && playing.value && window.electron.platform == 'darwin' && savedConfig?.touchBar == 'on') {
-            const currentLine = hasLyricsData ? getCurrentLineText(audio.currentTime) : '';
-            window.electron.ipcRenderer.send("update-current-lyrics", currentLine);
-        }
     }
 
-    if (!hasLyricsData && isElectron() && (desktopLyricsEnabled || statusBarLyricsEnabled || savedConfig?.apiMode === 'on')) {
+    if (!hasLyricsData) {
         retryMissingLyrics();
     }
 
@@ -936,12 +916,10 @@ const playSong = async (song) => {
                 ...savedLocalSong,
                 url: ''
             }));
-            window.electron?.ipcRenderer?.send('current-song-updated');
             return;
         }
         // 保存当前歌曲到本地存储
         localStorage.setItem('current_song', JSON.stringify(currentSong.value));
-        window.electron?.ipcRenderer?.send('current-song-updated');
 
         getVip();
         // 获取歌词
@@ -1380,47 +1358,6 @@ const handleKeyDown = (event) => {
     }
 };
 
-// 初始化系统媒体快捷键
-const setupMediaShortcuts = () => {
-    if (!isElectron()) return;
-
-    window.electron.ipcRenderer.on('play-previous-track', () => playSongFromQueue('previous'));
-    window.electron.ipcRenderer.on('play-next-track', () => playSongFromQueue('next'));
-    window.electron.ipcRenderer.on('volume-up', () => {
-        volume.value = Math.min(volume.value + 10, 100);
-        changeVolume();
-    });
-    window.electron.ipcRenderer.on('volume-down', () => {
-        volume.value = Math.max(volume.value - 10, 0);
-        changeVolume();
-    });
-    window.electron.ipcRenderer.on('toggle-play-pause', togglePlayPause);
-    window.electron.ipcRenderer.on('toggle-mute', toggleMute);
-    window.electron.ipcRenderer.on('toggle-like', () => playlistSelect.value.toLike());
-    window.electron.ipcRenderer.on('toggle-mode', togglePlaybackMode);
-    window.electron.ipcRenderer.on('url-params', (_event, data) => {
-        console.log('[PlayerControl] 接收到URL参数:', data);
-
-        // 处理歌曲哈希参数
-        if (data.hash) {
-            console.log('[PlayerControl] 从URL启动播放歌曲:', data.hash);
-            songQueue.privilegeSong(data.hash).then(res => {
-                if (res.status == 1) {
-                    const songInfo = res.data[0];
-                    addSongToQueue(songInfo.hash, songInfo.albumname, getCover(songInfo.info.image, 480), songInfo.singername)
-                }
-            })
-        }else if (data.listid) {
-            // 处理歌单ID参数
-            console.log('[PlayerControl] 从URL启动跳转到歌单:', data.listid);
-            router.push({
-                path: '/PlaylistDetail',
-                query: { global_collection_id: data.listid }
-            });
-        }
-    });
-};
-
 // 切换静音
 const toggleMute = () => {
     isMuted.value = !isMuted.value;
@@ -1429,6 +1366,34 @@ const toggleMute = () => {
     else volume.value = amplitudeToSlider(audio.volume);
     localStorage.setItem('player_volume', volume.value);
     console.log('[PlayerControl] 切换静音:', isMuted.value, '音量:', volume.value, '实际audio.volume:', audio.volume);
+};
+
+// 监听歌词大屏窗口发来的播放控制动作（BroadcastChannel 反向通信）
+let webLyricsActionCleanup = null;
+const setupWebLyricsActionListener = () => {
+    const channel = getLyricsChannel();
+    if (!channel) return;
+    const onMessage = (event) => {
+        const msg = event.data;
+        if (!msg || msg.type !== 'lyrics-action') return;
+        switch (msg.action) {
+            case 'previous-song':
+                playSongFromQueue('previous');
+                break;
+            case 'next-song':
+                playSongFromQueue('next');
+                break;
+            case 'toggle-play':
+                togglePlayPause();
+                break;
+            case 'close-lyrics':
+            case 'display-lyrics':
+                // 由歌词窗口自行处理，主窗口无需动作
+                break;
+        }
+    };
+    channel.addEventListener('message', onMessage);
+    webLyricsActionCleanup = () => channel.removeEventListener('message', onMessage);
 };
 
 const pausePlayback = (reason) => {
@@ -1556,6 +1521,29 @@ const handleSettingsChange = (event) => {
     syncDesktopLyricsFont(event.detail?.settings);
 };
 
+// 下载当前播放歌曲（弹音质选择）
+const downloadCurrentSong = () => {
+    const song = currentSong.value;
+    if (!song?.hash || isLocalSong(song)) return;
+    window.$qualityModal.open({
+        songs: [song],
+        onConfirm: async (quality) => {
+            window.$modal.showLoading();
+            try {
+                const { success, failed } = await downloadSongs([song], quality);
+                let msg = t('xia-zai-cheng-gong-shu', { n: success });
+                if (failed.length) msg += '，' + t('xia-zai-shi-bai-shu', { n: failed.length });
+                window.$message.success(msg);
+            } catch (error) {
+                console.error('[PlayerControl] 下载失败:', error);
+                window.$message.error(t('xia-zai-shi-bai'));
+            } finally {
+                window.$modal.hideLoading();
+            }
+        }
+    });
+};
+
 // 跳转到搜索页面搜索歌曲
 const searchSong = (songName) => {
     // 关闭全屏歌词
@@ -1671,8 +1659,8 @@ onMounted(() => {
         }
     });
 
-    // 设置系统媒体快捷键
-    setupMediaShortcuts();
+    // 监听歌词大屏播放控制
+    setupWebLyricsActionListener();
 
     // 恢复播放进度
     if (current_song && localStorage.getItem('player_progress')) {
@@ -1704,14 +1692,16 @@ onMounted(() => {
         console.log('[PlayerControl] 暂停事件');
         // 暂停时清除SMTC位置状态
         mediaSession.clearPositionState();
-        if (isElectron()) window.electron.ipcRenderer.send('play-pause-action', playing.value, audio.currentTime);
+        const channel = getLyricsChannel();
+        channel?.postMessage({ type: 'playing-status', playing: playing.value });
     });
 
     audio.addEventListener('play', () => {
         playing.value = true;
         console.log('[PlayerControl] 播放事件');
         if (!lyricsData.value.length) getCurrentLyrics();
-        if (isElectron()) window.electron.ipcRenderer.send('play-pause-action', playing.value, audio.currentTime);
+        const channel = getLyricsChannel();
+        channel?.postMessage({ type: 'playing-status', playing: playing.value });
     });
 
     audio.addEventListener('error', async (e) => {
@@ -1769,17 +1759,9 @@ onUnmounted(() => {
     audio.removeEventListener('play', () => { });
     audio.removeEventListener('error', () => { });
 
-    // 清理系统媒体快捷键
-    if (isElectron()) {
-        window.electron.ipcRenderer.removeAllListeners('play-previous-track');
-        window.electron.ipcRenderer.removeAllListeners('play-next-track');
-        window.electron.ipcRenderer.removeAllListeners('volume-up');
-        window.electron.ipcRenderer.removeAllListeners('volume-down');
-        window.electron.ipcRenderer.removeAllListeners('toggle-play-pause');
-        window.electron.ipcRenderer.removeAllListeners('toggle-mute');
-        window.electron.ipcRenderer.removeAllListeners('toggle-like');
-        window.electron.ipcRenderer.removeAllListeners('toggle-mode');
-    }
+    // 清理歌词大屏动作监听
+    webLyricsActionCleanup?.();
+    webLyricsActionCleanup = null;
 
     // 清理键盘事件
     document.removeEventListener('keydown', handleKeyDown);

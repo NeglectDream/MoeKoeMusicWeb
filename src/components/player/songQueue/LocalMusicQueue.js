@@ -147,10 +147,6 @@ export default function useLocalMusicQueue(t, musicQueueStore, currentSong, time
         const localHash = getLocalSongHash(localItem);
         if (!localHash) return { error: true };
 
-        if (typeof window !== 'undefined' && typeof window.electron !== 'undefined') {
-            window.electron.ipcRenderer.send('set-tray-title', (localItem.displayName || localItem.name) + ' - ' + (localItem.author || '未知艺术家'));
-        }
-
         try {
             clearTimeout(timeoutId.value);
             const hasCurrentFile = isLocalFile(localItem.file);

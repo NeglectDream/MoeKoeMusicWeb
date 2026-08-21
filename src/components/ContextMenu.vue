@@ -17,6 +17,7 @@
             <li v-if="contextSong.mvhash" @click="playMV(contextSong.mvhash)"><i class="fa-solid fa-video"></i> 播放MV
             </li>
             <li @click="shareSong(contextSong)"><i class="fa-solid fa-share-nodes"></i> 分享</li>
+            <li @click="downloadSong(contextSong)"><i class="fa-solid fa-download"></i> {{ $t('xia-zai-ge-qu') }}</li>
             <li v-if="MoeAuth.isAuthenticated && listId && contextSong.userid === MoeAuth.UserInfo.userid"
                 @click="cancel()"><i class="fa-solid fa-heart"></i> 取消收藏</li>
             <li v-if="MoeAuth.isAuthenticated" @click="addToNext(contextSong)"><i class="fa-solid fa-arrow-right"></i>
@@ -32,6 +33,7 @@ import { get } from '../utils/request';
 import { MoeAuthStore } from '../stores/store';
 import i18n from '@/utils/i18n';
 import { openMvPlayer, share } from '@/utils/utils';
+import { downloadSongWithQuality } from '@/utils/download';
 
 const router = useRouter();
 const MoeAuth = MoeAuthStore();
@@ -96,6 +98,20 @@ const shareSong = (song) => {
     if (!song) return;
     share(song.OriSongName, song.FileHash);
     hideContextMenu();
+};
+
+// 下载歌曲
+const downloadSong = (song) => {
+    if (!song) return;
+    hideContextMenu();
+    window.$qualityModal.open({
+        songs: [song],
+        onConfirm: async (quality) => {
+            const result = await downloadSongWithQuality(song, quality);
+            if (result.ok) $message.success(i18n.global.t('xia-zai-wan-cheng'));
+            else $message.error(i18n.global.t('xia-zai-shi-bai'));
+        }
+    });
 };
 
 // 添加到歌单功能

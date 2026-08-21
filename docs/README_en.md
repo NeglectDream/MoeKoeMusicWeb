@@ -11,10 +11,9 @@
     <a href="https://github.com/iAJue"><img src="https://img.shields.io/badge/%F0%9F%8E%89_Create_by_iAJue-with_Love_%E2%9D%A4-pink?style=flat-square" /></a>
   </p>
 <p align="center">
-An open-source, concise, and aesthetically pleasing third-party client for KuGou
+An open-source, concise, and aesthetically pleasing third-party Web music player for KuGou
 <br />
 <a href="https://github.com/iAJue/MoeKoeMusic/" target="blank"><strong>🌎 GitHub Repository</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-<a href="https://github.com/iAJue/MoeKoeMusic/releases" target="blank"><strong>📦️ Download Packages</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://MoeJue.cn" target="blank"><strong>💬 Visit Blog</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://Music.MoeKoe.cn" target="blank"><strong>🏠 Project Homepage</strong></a>
 
@@ -63,23 +62,15 @@ I said on my personal introduction page that I particularly enjoy listening to m
 ## 📢 Todo List
 - [x]  📺  Support MV playback
 - [x]  🌚 Light/Dark Mode  Automatic switching
-- [x]  👆  Support Touch Bar
 - [x]  🖥️  Support PWA
-- [x]  ⌨️   Global shortcut keys
 - [x]  🤟  Multi language support
-- [x]  📻  Desktop Lyrics
-- [x]  ⚙️  System architecture optimization
 - [x]  🎶  Songs, playlists/favorites, cancellation
 
 [View changelog](http://music.moekoe.cn/changelog.html)
 
 ## 📦️ Installation
 
-### 1. Client Installation
-
-Visit the [Releases](https://github.com/iAJue/MoeKoeMusic/releases) page of this project to download the installation package.
-
-### 2. Web Installation (Docker)
+### 1. Web Installation (Docker)
 
 * Note: Please open the corresponding port on the server after deployment, or use a reverse proxy for domain access.
 
@@ -124,7 +115,7 @@ Visit the [Releases](https://github.com/iAJue/MoeKoeMusic/releases) page of this
   ```
   
   Copy the content above and paste it into the container orchestration in the Baota panel, name the orchestration as MoeKoeMusic, and click deploy.
-### 3. One-Click Deployment
+### 2. One-Click Deployment
 [![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?template=https://github.com/iAJue/moekoemusic&install-command=npm%20install&output-directory=dist&root-directory=.%2F&build-command=npm%20run%20build&env=VITE_APP_API_URL)
 
 You need to fill in your own API address in the environment variable VITE_APP_API_URL.
@@ -151,110 +142,8 @@ npm run dev
 ```sh
 npm run build
 ```
-5. Compile the project
-- Windows: 
-```sh
-Npm run electron: build: win [default NSIS installation package]
-```
--	Linux: 
-```sh
-Npm run electron: build: Linux [default AppImage format]
-```
--	macOS: 
-```sh
-Npm run electron: build: macos [default universal architecture]
-```
-
 
 For more commands, please refer to the ` package.json ` file ` scripts `
-
-##  👷‍♂️  Compile client
-
-If you cannot find the installation package suitable for your device on the Release page, you can follow the steps below to package your own client.
-
-1. Install [Node.js](https://nodejs.org/en/)And ensure that the 'Node. js' version is>=18.0.0.
-
-2. Use ` git clone https://github.com/iAJue/MoeKoeMusic.git `Clone this repository locally.
-
-3. Use 'npm install' to install project dependencies.
-4. Compile API server
-- Windows:
-```sh
-npm run build:api:win
-```
-- Linux:
-```sh
-npm run build:api:linux
-```
-- macOS:
-```sh
-npm run build:api:macos
-```
-
-5. Choose the following command to package the appropriate installation package for you, and the packaged file should be located in the '/dits_electron' directory. For more information, please visit the [Electron Builder documentation](https://www.electron.build/cli )
-
-
-#### 1.  Package macOS platform
-- Universal macOS package (Intel and Apple Silicon dual architecture):
-```
-npm run electron:build -- --mac --universal
-```
-- Only Intel architecture:
-```
-npm run electron:build -- --mac --x64
-```
-- Only Apple Silicon architecture:
-```
-npm run electron:build -- --mac --arm64
-```
-
-
-#### 2.  Package Windows Platform
-
-- Default NSIS installation package (suitable for most Windows users):
-```
-npm run electron:build -- --win
-```
-- Create EXE files and Squirrel installation packages for Windows:
-```
-npm run electron:build -- --win --ia32 --x64 --arm64 --target squirrel
-```
-  - Ia32 is a 32-bit Windows architecture.
-  - X64 is a 64 bit Windows architecture.
-  - Arm64 is based on ARM Windows architecture (for devices such as Surface).
-
-- Generate portable EXE files for Windows (installation free):
-```
-npm run electron:build -- --win --portable
-```
-#### 3.  Packaging Linux Platform
-- Default AppImage format (applicable to most Linux distributions):
-```
-npm run electron:build -- --linux
-```
-- Snap (for Ubuntu and Snap supported distributions):
-```
-npm run electron:build -- --linux --target snap
-```
-- Deb (applicable to the Debian/Ubuntu series):
-```
-npm run electron:build -- --linux --target deb
-```
-- RPM (applicable to Red Hat/Fedora series):
-```
-npm run electron:build -- --linux --target rpm
-```
-
-#### 4.  Package all platforms
-
-If you need to generate installation packages for Windows, macOS, and Linux simultaneously, you can use the following command:
-```
-npm run electron:build -- -mwl
-```
-
-#### 5.  Custom compilation settings
-
-You can add other options as needed to further customize the packaging, such as specifying x64 and arm64 architectures, or selecting different target formats.
 
 ## ⭐ Support This Project
 

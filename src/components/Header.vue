@@ -104,16 +104,8 @@ const removeAfterEach = router.afterEach(() => {
 
 onMounted(() => {
     updateNavigationStatus();
-    if (window.electron) {
-        window.electron.ipcRenderer.on('version', (_event, version) => {
-            appVersion.value = version;
-            platform.value = window.electron.platform;
-            localStorage.setItem('version', version);
-        });
-    } else {
-        appVersion.value = __VERSION__ || '';
-        platform.value = 'Web';
-    }
+    appVersion.value = __VERSION__ || '';
+    platform.value = 'Web';
     document.addEventListener('click', handleClickOutside);
 });
 
@@ -299,16 +291,6 @@ header::before {
     content: '';
     position: absolute;
     inset: 0 100px 0 0;
-    -webkit-app-region: drag;
-}
-
-.nav-arrow,
-.nav-links a,
-.search-bar input,
-.header-recognize-entry,
-.profile,
-.profile img {
-    -webkit-app-region: no-drag;
 }
 
 .navigation {
@@ -331,13 +313,11 @@ header::before {
     a {
         text-decoration: none;
         color: var(--primary-color);
-        -webkit-app-region: no-drag;
         font-size: 18px;
         font-weight: 700;
         border-radius: 6px;
         padding: 6px 10px;
         transition: 0.2s;
-        -webkit-user-drag: none;
         margin-right: 12px;
         margin-left: 12px;
 
@@ -500,7 +480,6 @@ header::before {
         max-width: 35%;
         pointer-events: none;
         user-select: none;
-        -webkit-user-drag: none;
     }
 
     h2 {

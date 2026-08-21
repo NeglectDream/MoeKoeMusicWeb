@@ -46,8 +46,7 @@ const videoTitle = ref('视频播放');
 const loading = ref(true);
 const error = ref('');
 
-const isElectron = !!window.electron;
-const shouldCloseWindow = isElectron || !!window.opener || window.history.length <= 1;
+const shouldCloseWindow = !!window.opener || window.history.length <= 1;
 
 const mvhash = ref(route.query.hash || '');
 
@@ -118,7 +117,7 @@ const closeWindow = () => {
 const handleBackAction = () => {
     if (shouldCloseWindow) {
         closeWindow();
-        if (!window.closed && !window.opener && !isElectron) {
+        if (!window.closed && !window.opener) {
             router.push('/');
         }
         return;

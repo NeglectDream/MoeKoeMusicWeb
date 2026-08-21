@@ -17,7 +17,7 @@
                     </button>
                 </div>
                 <SongSearchList :songs="songSection.lists" @song-click="emit('song-play', $event)"
-                    @song-contextmenu="handleSongContextMenu" />
+                    @song-contextmenu="handleSongContextMenu" @download="emit('song-download', $event)" />
             </section>
 
             <section v-if="albumSection" class="complex-section">
@@ -120,6 +120,7 @@ const props = defineProps({
 
 const emit = defineEmits([
     'song-play',
+    'song-download',
     'song-contextmenu',
     'artist-click',
     'album-click',

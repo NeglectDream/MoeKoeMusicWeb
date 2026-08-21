@@ -246,9 +246,6 @@ export default function useAudioController({ onSongEnd, updateCurrentTime }) {
             playing.value = false;
         }
         console.log(`[AudioController] ${event.type}事件: playing=${playing.value}`);
-        if (typeof window !== 'undefined' && typeof window.electron !== 'undefined') {
-            window.electron.ipcRenderer.send('play-pause-action', playing.value, audio.currentTime);
-        }
     };
 
     // 切换播放/暂停

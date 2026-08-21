@@ -1,6 +1,6 @@
 <template>
     <div class="lyrics-container" :class="{ 'locked': isLocked, 'hovering': isHovering && !isLocked }"
-        :style="[lyricsFontStyle, resizeCursor ? { cursor: resizeCursor } : null]" @mouseleave="handleMouseLeave">
+        @mouseleave="handleMouseLeave">
         <div class="lyrics-panel">
         <!-- 控制栏 -->
         <div class="controls-overlay" ref="controlsOverlay">
@@ -98,7 +98,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { getLyricsChannel } from '../utils/utils'
 
+const router = useRouter()
 let currentSongHash = ''
 
 const isPlaying = ref(false)
@@ -111,14 +114,6 @@ const currentTime = ref(0)
 const currentLineIndex = ref(0)
 const lyrics = ref([])
 const currentLineScrollX = ref(0)
-const isDragging = ref(false)
-const dragOffset = ref({ x: 0, y: 0 })
-const resizeCursor = ref('')
-let dragStartScreen = { x: 0, y: 0 }
-let hasDragMoved = false
-let resizeState = null
-let hoverPollingTimer = null
-let hoverPollingPending = false
 const currentLineStyle = computed(() => ({
     transform: `translateX(${currentLineScrollX.value}px)`
 }))
@@ -132,86 +127,6 @@ const throttle = (func, delay) => {
             func(...args)
         }
     }
-}
-
-// Linux 下 setIgnoreMouseEvents 的 forward 选项不可用，避免直接吃掉鼠标事件导致无法点击
-const isLinux = window?.electron?.platform === 'linux'
-const setIgnoreMouseEvents = (ignore) => {
-    if (isLinux) return
-    window.electron.ipcRenderer.send('set-ignore-mouse-events', ignore)
-}
-
-const RESIZE_EDGE_SIZE = 8
-const MIN_LYRICS_WINDOW_WIDTH = 800
-const MIN_LYRICS_WINDOW_HEIGHT = 128
-
-const getResizeDirection = (event) => {
-    const left = event.clientX <= RESIZE_EDGE_SIZE
-    const right = event.clientX >= window.innerWidth - RESIZE_EDGE_SIZE
-    const top = event.clientY <= RESIZE_EDGE_SIZE
-    const bottom = event.clientY >= window.innerHeight - RESIZE_EDGE_SIZE
-
-    if (top && left) return 'nw'
-    if (top && right) return 'ne'
-    if (bottom && left) return 'sw'
-    if (bottom && right) return 'se'
-    if (left) return 'w'
-    if (right) return 'e'
-    if (top) return 'n'
-    if (bottom) return 's'
-    return ''
-}
-
-const getResizeCursor = (direction) => {
-    if (direction === 'n' || direction === 's') return 'ns-resize'
-    if (direction === 'e' || direction === 'w') return 'ew-resize'
-    if (direction === 'nw' || direction === 'se') return 'nwse-resize'
-    if (direction === 'ne' || direction === 'sw') return 'nesw-resize'
-    return ''
-}
-
-const setLyricsWindowFixedSize = (fixed) => {
-    window.electron.ipcRenderer.send('lyrics-window-fixed-size', {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        fixed
-    })
-}
-
-const sendWindowDrag = throttle((bounds) => {
-    window.electron.ipcRenderer.send('window-drag', bounds)
-}, 16)
-
-const updateResizeCursor = (cursor) => {
-    resizeCursor.value = cursor
-    document.documentElement.style.cursor = cursor
-    document.body.style.cursor = cursor
-}
-
-const isMouseOnLyricsContent = (event) => {
-    return Array.from(document.querySelectorAll('.lyrics-content')).some((element) => {
-        const rect = element.getBoundingClientRect()
-        return event.clientX >= rect.left &&
-            event.clientX <= rect.right &&
-            event.clientY >= rect.top &&
-            event.clientY <= rect.bottom
-    })
-}
-
-const isScreenPointInElement = (point, bounds, element) => {
-    if (!point || !bounds || !element) return false
-    const rect = element.getBoundingClientRect()
-    const left = bounds.x + rect.left
-    const right = bounds.x + rect.right
-    const top = bounds.y + rect.top
-    const bottom = bounds.y + rect.bottom
-    return point.x >= left && point.x <= right && point.y >= top && point.y <= bottom
-}
-
-const isScreenPointInSelector = (point, bounds, selector) => {
-    return Array.from(document.querySelectorAll(selector)).some((element) => (
-        isScreenPointInElement(point, bounds, element)
-    ))
 }
 
 const displayedLines = ref([0, 1])
@@ -320,18 +235,17 @@ const handleColorChange = (color, type) => {
     }
 }
 
-const persistDesktopLyricsSetting = (value) => {
-    const savedSettings = JSON.parse(localStorage.getItem('settings') || '{}')
-    savedSettings.desktopLyrics = value
-    localStorage.setItem('settings', JSON.stringify(savedSettings))
-    window.electron.ipcRenderer.send('save-settings', JSON.parse(JSON.stringify(savedSettings)))
-}
-
 const sendAction = (action) => {
-    if (action === 'close-lyrics' || action === 'display-lyrics') {
-        persistDesktopLyricsSetting(action === 'display-lyrics' ? 'on' : 'off')
+    const channel = getLyricsChannel()
+    if (channel) channel.postMessage({ type: 'lyrics-action', action })
+
+    if (action === 'close-lyrics') {
+        if (window.opener && !window.opener.closed) {
+            window.close()
+        } else {
+            router.push('/')
+        }
     }
-    window.electron.ipcRenderer.send('desktop-lyrics-action', action)
 }
 
 const togglePlay = () => {
@@ -344,7 +258,6 @@ const toggleLock = () => {
     localStorage.setItem('lyrics-lock', isLocked.value)
     if (isLocked.value) {
         isHovering.value = false
-        setIgnoreMouseEvents(true)
     }
 }
 
@@ -382,80 +295,22 @@ const updateDisplayedLines = () => {
     }, 200)
 }
 
-// 开始拖动
-const startDrag = (event) => {
-    if (isLocked.value || event.button !== 0) return
-
-    const resizeDirection = getResizeDirection(event)
-    if (resizeDirection) {
-        resizeState = {
-            direction: resizeDirection,
-            startScreenX: event.screenX,
-            startScreenY: event.screenY,
-            startX: Math.round(event.screenX - event.clientX),
-            startY: Math.round(event.screenY - event.clientY),
-            startWidth: Math.round(window.innerWidth),
-            startHeight: Math.round(window.innerHeight)
-        }
-        isHovering.value = true
-        updateResizeCursor(getResizeCursor(resizeDirection))
-        setIgnoreMouseEvents(false)
-        startHoverPolling()
-        event.preventDefault()
-        return
-    }
-
-    const target = event.target
-    if (target?.closest?.('button, input, select, textarea, a')) return
-
-    // 只有在悬停状态下才允许拖动（即只有先碰到歌词文本后才能拖动）
-    if (isHovering.value) {
-        isDragging.value = true
-        hasDragMoved = false
-        dragStartScreen = {
-            x: event.screenX,
-            y: event.screenY
-        }
-        dragOffset.value = {
-            x: event.clientX,
-            y: event.clientY
-        }
-    }
-}
-
 // 检查鼠标是否在交互区域
 const checkMousePosition = (event) => {
-    const resizeDirection = isLocked.value ? '' : getResizeDirection(event)
-    const isMouseInResizeArea = Boolean(resizeDirection)
-
-    if (resizeState) {
-        isHovering.value = true
-        setIgnoreMouseEvents(false)
-        return
-    }
-
-    if (!isDragging.value && !resizeState) {
-        updateResizeCursor(getResizeCursor(resizeDirection))
-    }
-
     if (isLocked.value) {
         // 检查鼠标是否在歌词文本上或控制按钮上
         const isMouseInControls = event.target.closest('.controls-overlay') !== null || event.target.closest('.lock-button') !== null
-        const isMouseOnLyrics = isMouseOnLyricsContent(event)
+        const isMouseOnLyrics = event.target.closest('.lyrics-content') !== null
 
         // 当鼠标在歌词文本上或者在控制按钮上时，显示控制按钮
         if (isMouseOnLyrics || isMouseInControls) {
             document.querySelector('.controls-overlay')?.classList.add('show-locked-controls')
-            startHoverPolling()
         } else {
             document.querySelector('.controls-overlay')?.classList.remove('show-locked-controls')
         }
-
-        setIgnoreMouseEvents(!isMouseInControls)
         return
     }
 
-    // 使用更可靠的方法检查鼠标位置
     const lyricsContainer = document.querySelector('.lyrics-panel')
     if (!lyricsContainer) return
 
@@ -474,67 +329,21 @@ const checkMousePosition = (event) => {
     // 如果鼠标在歌词文本上或控制栏上，激活悬停状态
     if ((isMouseOnLyrics || isMouseInControls) && !isLocked.value) {
         isHovering.value = true
-        startHoverPolling()
     }
 
     // 只有当鼠标完全离开容器时才重置悬停状态
     if (!isMouseInContainer && !isLocked.value) {
         isHovering.value = false
     }
-
-    // 设置鼠标事件穿透，当在控制区域或悬停状态时不穿透
-    setIgnoreMouseEvents(!(isMouseInControls || isHovering.value || isMouseInResizeArea))
 }
 
 const handleMouseLeave = () => {
-    if (isDragging.value || resizeState) return
     isHovering.value = false
     document.querySelector('.controls-overlay')?.classList.remove('show-locked-controls')
-    updateResizeCursor('')
-    setIgnoreMouseEvents(true)
-    stopHoverPolling()
 }
 
-const stopHoverPolling = () => {
-    if (!hoverPollingTimer) return
-    clearInterval(hoverPollingTimer)
-    hoverPollingTimer = null
-    hoverPollingPending = false
-}
-
-const pollHoverState = async () => {
-    if (hoverPollingPending || isDragging.value || resizeState) return
-    hoverPollingPending = true
-    try {
-        const state = await window.electron.ipcRenderer.invoke('lyrics-window-pointer-state')
-        const point = state?.cursor
-        const bounds = state?.bounds
-        const isInControls = isScreenPointInSelector(point, bounds, '.controls-overlay, .lock-button')
-
-        if (isLocked.value) {
-            const isOnLyrics = isScreenPointInSelector(point, bounds, '.lyrics-content')
-            if (isOnLyrics || isInControls) {
-                document.querySelector('.controls-overlay')?.classList.add('show-locked-controls')
-                setIgnoreMouseEvents(!isInControls)
-                return
-            }
-        } else {
-            const isInContainer = isScreenPointInSelector(point, bounds, '.lyrics-panel')
-            if (isInContainer || isInControls) return
-        }
-
-        handleMouseLeave()
-    } finally {
-        hoverPollingPending = false
-    }
-}
-
-const startHoverPolling = () => {
-    if (hoverPollingTimer) return
-    hoverPollingTimer = setInterval(pollHoverState, 120)
-}
-
-window.electron.ipcRenderer.on('lyrics-data', (_event, data) => {
+// 歌词数据接收：Web 端走 BroadcastChannel
+const handleLyricsData = (data) => {
     isPlaying.value = data.playing
     if (data.currentTime < 1) {
         lyrics.value = processLyricsData(data.lyricsData);
@@ -549,7 +358,24 @@ window.electron.ipcRenderer.on('lyrics-data', (_event, data) => {
     }
     currentTime.value = data.currentTime * 1000;
     updateCurrentLineIndex();
-})
+}
+
+const handlePlayingStatus = (playing) => {
+    isPlaying.value = !!playing
+}
+
+let cleanupLyricsHandlers = null
+const channel = getLyricsChannel()
+if (channel) {
+    const onMessage = (event) => {
+        const msg = event.data
+        if (!msg) return
+        if (msg.type === 'lyrics-data') handleLyricsData(msg)
+        else if (msg.type === 'playing-status') handlePlayingStatus(msg.playing)
+    }
+    channel.onmessage = onMessage
+    cleanupLyricsHandlers = () => { channel.onmessage = null }
+}
 
 // 处理歌词数据，添加完整的文本
 const processLyricsData = (lyricsData) => {
@@ -561,10 +387,6 @@ const processLyricsData = (lyricsData) => {
         return line;
     });
 }
-
-window.electron.ipcRenderer.on('playing-status', (_event, playing) => {
-    isPlaying.value = !!playing
-})
 
 const fontSize = ref(32)
 const desktopLyricsFont = ref('')
@@ -591,94 +413,18 @@ const changeFontSize = (delta) => {
 
 onMounted(() => {
     isLocked.value = localStorage.getItem('lyrics-lock') === 'true'
-    setIgnoreMouseEvents(true)
     loadDesktopLyricsFont()
     window.addEventListener('storage', handleStorageChange)
 
     document.addEventListener('mousemove', checkMousePosition)
-    document.addEventListener('mouseleave', handleMouseLeave)
-    document.addEventListener('mousedown', startDrag)
-    document.addEventListener('mousemove', onDrag)
-    document.addEventListener('mouseup', endDrag)
     fontSize.value = parseInt(localStorage.getItem('lyrics-font-size') || '32')
     setInterval(() => { isPlaying.value && (currentTime.value += 5) }, 5)
 })
 
-const onDrag = (event) => {
-    if (resizeState) {
-        const deltaX = event.screenX - resizeState.startScreenX
-        const deltaY = event.screenY - resizeState.startScreenY
-        const direction = resizeState.direction
-
-        let x = resizeState.startX
-        let y = resizeState.startY
-        let width = resizeState.startWidth
-        let height = resizeState.startHeight
-
-        if (direction.includes('e')) {
-            width = Math.max(MIN_LYRICS_WINDOW_WIDTH, resizeState.startWidth + deltaX)
-        }
-        if (direction.includes('s')) {
-            height = Math.max(MIN_LYRICS_WINDOW_HEIGHT, resizeState.startHeight + deltaY)
-        }
-        if (direction.includes('w')) {
-            width = Math.max(MIN_LYRICS_WINDOW_WIDTH, resizeState.startWidth - deltaX)
-            x = resizeState.startX + resizeState.startWidth - width
-        }
-        if (direction.includes('n')) {
-            height = Math.max(MIN_LYRICS_WINDOW_HEIGHT, resizeState.startHeight - deltaY)
-            y = resizeState.startY + resizeState.startHeight - height
-        }
-
-        sendWindowDrag({
-            x: Math.round(x),
-            y: Math.round(y),
-            width: Math.round(width),
-            height: Math.round(height)
-        })
-        return
-    }
-
-    if (!isDragging.value) return
-
-    const deltaX = event.screenX - dragStartScreen.x
-    const deltaY = event.screenY - dragStartScreen.y
-
-    if (!hasDragMoved && (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3)) {
-        hasDragMoved = true
-        setLyricsWindowFixedSize(true)
-    }
-
-    if (hasDragMoved) {
-        sendWindowDrag({
-            x: Math.round(event.screenX - dragOffset.value.x),
-            y: Math.round(event.screenY - dragOffset.value.y),
-            width: Math.round(window.innerWidth),
-            height: Math.round(window.innerHeight)
-        })
-    }
-}
-
-const endDrag = () => {
-    if (isDragging.value && hasDragMoved) {
-        setLyricsWindowFixedSize(false)
-    }
-    isDragging.value = false
-    hasDragMoved = false
-    resizeState = null
-    updateResizeCursor('')
-    pollHoverState()
-}
-
 onBeforeUnmount(() => {
-    stopHoverPolling()
+    cleanupLyricsHandlers?.()
     window.removeEventListener('storage', handleStorageChange)
     document.removeEventListener('mousemove', checkMousePosition)
-    document.removeEventListener('mouseleave', handleMouseLeave)
-    document.removeEventListener('mousedown', startDrag)
-    document.removeEventListener('mousemove', onDrag)
-    document.removeEventListener('mouseup', endDrag)
-    updateResizeCursor('')
 })
 
 const isHovering = ref(false)
@@ -833,9 +579,7 @@ html {
 <style lang="scss" scoped>
 $white: white;
 $text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-$shadow-light: 0 2px 8px rgba(0, 0, 0, 0.2);
 $bg-overlay: rgba(30, 30, 30, 0.75);
-$bg-button: rgba(50, 50, 50, 0.7);
 
 .lyrics-text {
     display: inline-block;
@@ -894,10 +638,6 @@ $bg-button: rgba(50, 50, 50, 0.7);
     transform: translateZ(0);
     overflow: hidden;
 
-    &.hovering {
-        cursor: move;
-    }
-
     &.locked {
         .controls-overlay {
             opacity: 0;
@@ -906,10 +646,6 @@ $bg-button: rgba(50, 50, 50, 0.7);
         .controls-overlay.show-locked-controls {
             opacity: 1;
         }
-    }
-
-    &:not(.locked) .lyrics-content.hovering:hover {
-        cursor: move;
     }
 }
 
@@ -987,10 +723,6 @@ $bg-button: rgba(50, 50, 50, 0.7);
     min-width: 0;
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-
-    &:not(.locked-controls) {
-        cursor: move;
-    }
 
     &.locked-controls {
         background: transparent;
@@ -1086,10 +818,6 @@ $bg-button: rgba(50, 50, 50, 0.7);
     font-family: var(--desktop-lyrics-font-family) !important;
 }
 
-.font-size-controls {
-    display: none;
-}
-
 .font-control {
     opacity: 0.8;
     padding: 0 6px;
@@ -1113,10 +841,6 @@ $bg-button: rgba(50, 50, 50, 0.7);
             margin: 0 1px;
         }
     }
-}
-
-.font-icon {
-    display: none;
 }
 
 .color-controls {

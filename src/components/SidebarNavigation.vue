@@ -348,16 +348,8 @@ onMounted(() => {
     updateNavigationStatus();
     emitSidebarWidth();
     void getplaylist();
-    if (window.electron) {
-        window.electron.ipcRenderer.on('version', (_event, version) => {
-            appVersion.value = version;
-            platform.value = window.electron.platform;
-            localStorage.setItem('version', version);
-        });
-    } else {
-        appVersion.value = __VERSION__ || '';
-        platform.value = 'Web';
-    }
+    appVersion.value = __VERSION__ || '';
+    platform.value = 'Web';
     document.addEventListener('click', handleClickOutside);
 });
 
@@ -436,7 +428,6 @@ watch(() => MoeAuth.isAuthenticated, (isAuthenticated) => {
     content: '';
     position: absolute;
     inset: 0 100px 0 0;
-    -webkit-app-region: drag;
 }
 
 .side-top-actions.collapsed {
@@ -461,7 +452,6 @@ watch(() => MoeAuth.isAuthenticated, (isAuthenticated) => {
     cursor: pointer;
     border-radius: 8px;
     transition: 0.2s;
-    -webkit-app-region: no-drag;
 
     &:hover {
         background: var(--side-hover);
@@ -506,7 +496,6 @@ watch(() => MoeAuth.isAuthenticated, (isAuthenticated) => {
     color: var(--side-muted);
     background: transparent;
     transition: flex-basis 0.2s ease, padding 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
-    -webkit-app-region: no-drag;
     position: relative;
     z-index: 1;
 
@@ -1013,7 +1002,6 @@ watch(() => MoeAuth.isAuthenticated, (isAuthenticated) => {
         max-width: 35%;
         pointer-events: none;
         user-select: none;
-        -webkit-user-drag: none;
     }
 
     h2 {

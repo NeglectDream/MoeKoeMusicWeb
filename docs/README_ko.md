@@ -11,10 +11,9 @@
     <a href="https://github.com/iAJue"><img src="https://img.shields.io/badge/%F0%9F%8E%89_Create_by_iAJue-with_Love_%E2%9D%A4-pink?style=flat-square" /></a>
   </p>
 <p align="center">
-오픈 소스 간결하고 용모가 높은 쿨도그 제3자 클라이언트
+오픈 소스 간결하고 용모가 높은 쿨도그 제3자 Web 음악 플레이어
 <br />
 <a href="https://github.com/iAJue/MoeKoeMusic/" target="blank"><strong>🌎 GitHub창고</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-<a href="https://github.com/iAJue/MoeKoeMusic/releases" target="blank"><strong>📦️ 설치 패키지 다운로드 </strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://MoeJue.cn" target="blank"><strong>💬 블로그 방문 </strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
 <a href="https://Music.MoeKoe.cn" target="blank"><strong>🏠 프로젝트 홈페이지</strong></a>
 </p>
@@ -62,23 +61,15 @@
 ## 📢 Todo List
 - [x] 📺 뮤직비디오 재생 지원
 - [x] 🌚 Light/Dark Mode 자동 전환
-- [x] 👆 Touch Bar 지원
 - [x] 🖥️ PWA 지원
-- [x] ⌨️ 단축키 및 전역 단축키 사용자 정의
 - [x] 🤟 다국어 지원
-- [x] 📻 데스크톱 가사
-- [x] ⚙️ 시스템 아키텍처 최적화
 - [x] 🎶 노래, 트랙 리스트 / 모음, 취소
 
 [변경 로그 보기](http://music.moekoe.cn/changelog.html)
 
 ## 📦️ 설치
 
-### 1. 클라이언트 설치
-
-본 프로젝트의 [Releases](https://github.com/iAJue/MoeKoeMusic/releases) 페이지를 방문하여 설치 패키지를 다운로드하세요.
-
-### 2. WEB 설치 (docker)
+### 1. WEB 설치 (docker)
 
 * 주의: 배포 후 서버의 해당 포트를 개방해야 사용할 수 있습니다. 또는 역방향 프록시를 사용하여 도메인 접근을 구현할 수 있습니다.
 
@@ -123,7 +114,7 @@
   ```
   
   위의 내용을 복사하여 바오타 패널의 컨테이너 오케스트레이션에 붙여넣고, 오케스트레이션 이름을 MoeKoeMusic으로 설정한 후 배포를 클릭하면 됩니다.
-### 3. 원클릭 배포
+### 2. 원클릭 배포
 [![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?template=https://github.com/iAJue/moekoemusic&install-command=npm%20install&output-directory=dist&root-directory=.%2F&build-command=npm%20run%20build&env=VITE_APP_API_URL)
 
 환경 변수 VITE_APP_API_URL에 본인의 API 주소를 입력해야 합니다.
@@ -150,114 +141,8 @@ npm run dev
 ```sh
 npm run build
 ```
-5. 항목 컴파일
-- Windows: 
-```sh
-npm run electron:build:win [기본 NSIS 설치 패키지]
-```
--	Linux: 
-```sh
-npm run electron:build:linux [기본 AppImage 형식]
-```
--	macOS: 
-```sh
-npm run electron:build:macos [기본 듀얼 아키텍처]
-```
-
 
 더 많은 명령은 `package.json` 파일 `scripts`를 참조하십시오.
-
-## 👷‍♂️ 클라이언트 컴파일
-
-Release 페이지에서 장치에 맞는 설치 패키지를 찾지 못하면 다음 단계에 따라 클라이언트를 포장할 수 있습니다.
-
-1. 설치[Node.js](https://nodejs.org/en/) 및 `Node.js` 버전이 > = 18.0.0인지 확인합니다.
-
-2. `git clone 사용https://github.com/iAJue/MoeKoeMusic.git'본 창고를 로컬로 복제합니다.
-
-3. `npm install`을 사용하여 프로젝트 종속성을 설치합니다.
-4. API 서버 컴파일
-- Windows:
-```sh
-npm run build:api:win
-```
-- Linux:
-```sh
-npm run build:api:linux
-```
-- macOS:
-```sh
-npm run build:api:macos
-```
-
-1. 다음 명령을 선택하여 적합한 설치 패키지를 포장합니다. 포장된 파일은'/dist_electron'디렉터리에 있습니다.자세한 내용은 [electron-builder 문서](https://www.electron.build/cli)
-
-
-#### 1. macOS 플랫폼 패키지
-- 범용 macOS 패키지(Intel 및 Apple Silicon 듀얼 아키텍처):
-```
-npm run electron:build -- --mac --universal
-```
-- Intel 아키텍처만:
-```
-npm run electron:build -- --mac --x64
-```
-- Apple Silicon 아키텍처만:
-```
-npm run electron:build -- --mac --arm64
-```
-
-
-#### 2. Windows 플랫폼 패키지
-
-- 기본 NSIS 설치 패키지(대부분의 Windows 사용자용):
-```
-npm run electron:build -- --win
-```
-- Windows용 EXE 파일 및 Squirrel 설치 패키지를 만듭니다.
-```
-npm run electron:build -- --win --ia32 --x64 --arm64 --target squirrel
-```
--- ia32는 32비트 Windows 아키텍처입니다.
-
----x64는 64비트 Windows 아키텍처입니다.
-
--- arm64는 ARM Windows 아키텍처(Surface와 같은 장치)입니다.
-
-- Windows용 휴대용 EXE 파일(설치되지 않음) 생성:
-```
-npm run electron:build -- --win --portable
-```
-
-#### 3. Linux 플랫폼 패키지
-- 기본 AppImage 형식(대부분의 Linux 배포용):
-```
-npm run electron:build -- --linux
-```
-- snap(Ubuntu 및 snap 지원 릴리스용):
-```
-npm run electron:build -- --linux --target snap
-```
-- deb(Debian/Ubuntu 시리즈용):
-```
-npm run electron:build -- --linux --target deb
-```
-- rpm(Red Hat/Fedora 시리즈용):
-```
-npm run electron:build -- --linux --target rpm
-```
-
-#### 4. 모든 플랫폼 패키지
-
-Windows, macOS 및 Linux를 모두 생성하는 설치 패키지가 필요한 경우 다음 명령을 사용할 수 있습니다.
-```
-npm run electron:build -- -mwl
-```
-
-#### 5. 컴파일 설정 사용자 정의
-
-x64 및 arm64 스키마를 지정하거나 다른 대상 형식을 선택하는 등의 추가 옵션을 추가하여 패키지를 추가로 사용자 지정할 수 있습니다.
-
 
 ## ⭐ 프로젝트 지원
 

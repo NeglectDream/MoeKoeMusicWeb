@@ -19,32 +19,17 @@ import { DISCLAIMER_BANNER_SRC, USER_AGREEMENT_KEYS } from '../config/disclaimer
 const showModal = ref(false);
 
 onMounted(() => {
-    if(isElectron()){
-        window.electron.ipcRenderer.on('show-disclaimer', () => {
-            showModal.value = true;
-        });
-        return
-    }
     if(!localStorage.getItem('disclaimerAccepted')){
         showModal.value = true;
     }
 });
-const isElectron = () => {
-    return typeof window !== 'undefined' && typeof window.electron !== 'undefined';
-};
+
 const agree = () => {
     showModal.value = false;
-    if(isElectron()){
-        window.electron.ipcRenderer.send('disclaimer-response', true);
-        return;
-    }
     localStorage.setItem('disclaimerAccepted', true);
 };
 
 const disagree = () => {
-    if(isElectron()){
-        window.electron.ipcRenderer.send('disclaimer-response', false);
-    }
     window.location.href = 'about:blank';
     window.close();
 };
@@ -57,7 +42,7 @@ const disagree = () => {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0,0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -81,7 +66,6 @@ const disagree = () => {
     max-width: 35%;
     pointer-events: none;
     user-select: none;
-    -webkit-user-drag: none;
 }
 
 .button-group {

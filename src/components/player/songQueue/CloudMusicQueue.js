@@ -4,9 +4,6 @@ export default function useCloudMusicQueue(t, musicQueueStore, currentSong, time
     // 添加云盘歌曲到播放列表
     const addCloudMusicToQueue = async (hash, name, author, timeLength, cover, isReset = true) => {
         const currentSongHash = currentSong.value.hash;
-        if (typeof window !== 'undefined' && typeof window.electron !== 'undefined') {
-            window.electron.ipcRenderer.send('set-tray-title', name + ' - ' + author);
-        }
 
         try {
             clearTimeout(timeoutId.value);

@@ -10,12 +10,11 @@
     <a href="https://github.com/iAJue"><img src="https://img.shields.io/badge/%F0%9F%8E%89_Create_by_iAJue-with_Love_%E2%9D%A4-pink?style=flat-square" /></a>
   </p>
   <p align="center">
-    一款开源简洁高颜值的酷狗第三方客户端
+    一款开源简洁高颜值的酷狗第三方 Web 音乐播放器
     <br />
     <a href="https://github.com/iAJue/MoeKoeMusic/" target="blank"><strong>🌎 GitHub仓库</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="https://github.com/iAJue/MoeKoeMusic/releases" target="blank"><strong>📦️ 下载安装包</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="https://MoeJue.cn" target="blank"><strong>💬 访问博客</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
-    <a href="https://Music.MoeKoe.cn" target="blank"><strong>🏠 项目主页</strong></a>
+    <a href="https://Music.MoeKoe.cn" target="blank"><strong>🏠 项目主页</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="https://MoeJue.cn" target="blank"><strong>💬 访问博客</strong></a>
   </p>
   <p align="center">
     <a href="https://github.com/iAJue/MoeKoeMusic/README.md" target="blank"><strong>🇨🇳 简体中文</strong></a>&nbsp;&nbsp;|&nbsp;&nbsp;
@@ -61,23 +60,15 @@
 ## 📢 Todo List
 - [x] 📺 支持 MV 播放
 - [x] 🌚 Light/Dark Mode 自动切换
-- [x] 👆 支持 Touch Bar
 - [x] 🖥️ 支持 PWA
-- [x] ⌨️ 全局快捷键
 - [x] 🤟 多语言支持
-- [x] 📻 桌面歌词
-- [x] ⚙️ 系统架构优化
 - [x] 🎶 歌曲、歌单/收藏、取消
 
 [查看更新日志](http://music.moekoe.cn/changelog.html)
 
 ## 📦️ 安装
 
-### 1. 客户端安装
-
-访问本项目的 [Releases](https://github.com/iAJue/MoeKoeMusic/releases) 页面下载安装包。
-
-### 2. WEB端安装（docker）
+### 1. WEB端安装（docker）
 
 * 注意：部署后请开放服务器对应端口才可使用，或者使用反向代理实现域名访问。
 
@@ -123,7 +114,7 @@
     
     复制内容上面的内容，粘贴到宝塔面板的容器编排里面，编排名称为MoeKoeMusic，点击部署即可。
 
-### 3. 一键部署
+### 2. 一键部署
 [![使用 EdgeOne Pages 部署](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/pages/new?template=https://github.com/iAJue/moekoemusic&install-command=npm%20install&output-directory=dist&root-directory=.%2F&build-command=npm%20run%20build&env=VITE_APP_API_URL)
 
 需在环境变量(VITE_APP_API_URL)中填写自己的API地址
@@ -150,116 +141,8 @@ npm run dev
 ```sh
 npm run build
 ```
-5. 编译项目
-  - Windows: 
-  ```sh
-  npm run electron:build:win [默认 NSIS 安装包]
-  ```
-  -	Linux: 
-  ```sh
-  npm run electron:build:linux [默认 AppImage 格式]
-  ```
-  -	macOS: 
-  ```sh
-  npm run electron:build:macos [默认 macOS 双架构]
-  ```
 
-
-更多命令请查看 `package.json` 文件 `scripts` 
-
-## 👷‍♂️ 编译客户端
-
-如果在 Release 页面没有找到适合你的设备的安装包的话，你可以根据下面的步骤来打包自己的客户端。
-
-1. 安装 [Node.js](https://nodejs.org/en/)，并确保 `Node.js` 版本 >= 18.0.0。
-
-2. 使用 `git clone https://github.com/iAJue/MoeKoeMusic.git` 克隆本仓库到本地。
-
-3. 使用 `npm install` 安装项目依赖。
-4. 编译API服务端
-    - Windows:
-        ```sh
-        npm run build:api:win
-        ```
-    - Linux:
-        ```sh
-        npm run build:api:linux
-        ```
-    - macOS:
-      ```sh
-      npm run build:api:macos
-      ```
-
-5. 选择下列的命令来打包适合的你的安装包，打包出来的文件在 `/dist_electron` 目录下。了解更多信息可访问 [electron-builder 文档](https://www.electron.build/cli)
-
-
-#### 1. 打包 macOS 平台
-   - 通用的 macOS 包（Intel 和 Apple Silicon 双架构）：
-   ```
-   npm run electron:build -- --mac --universal
-   ```
-   - 仅 Intel 架构：
-   ```
-   npm run electron:build -- --mac --x64
-   ```
-   - 仅 Apple Silicon 架构：
-   ```
-   npm run electron:build -- --mac --arm64
-   ```
-
-
-#### 2. 打包 Windows 平台
-
-   - 默认 NSIS 安装包（适合大多数 Windows 用户）：
-   ```
-   npm run electron:build -- --win
-   ```
-   - 为 Windows 创建 EXE 文件和 Squirrel 安装包：
-   ```
-   npm run electron:build -- --win --ia32 --x64 --arm64 --target squirrel
-   ```
-       - --ia32 为 32 位 Windows 架构。
-       - --x64 为 64 位 Windows 架构。
-       - --arm64 为 ARM Windows 架构（Surface 等设备）。
-
-   - 为 Windows 生成便携式的 EXE 文件（免安装）：
-   ```
-   npm run electron:build -- --win --portable
-   ```
-#### 3. 打包 Linux 平台
-   - 默认 AppImage 格式（适用于大多数 Linux 发行版）：
-
-   ```
-   npm run electron:build -- --linux
-   ```
-   - snap（适用于 Ubuntu 和支持 snap 的发行版）：
-   ```
-   npm run electron:build -- --linux --target snap
-   ```
-   - 	deb（适用于 Debian/Ubuntu 系列）：
-   ```
-   npm run electron:build -- --linux --target deb
-   ```
-   - rpm（适用于 Red Hat/Fedora 系列）：
-   ```
-   npm run electron:build -- --linux --target rpm
-   ```
-   - ARM64架构(ARM v8+): 
-   ```
-   npm run build:api:linux-arm64 //编译API
-   npm run electron:build:linux-arm64 //编译主程序
-   ```
-
-#### 4. 打包所有平台
-
-  如果需要同时生成 Windows、macOS 和 Linux 的安装包，可以使用以下命令：
-  ```
-  npm run electron:build -- -mwl
-  ```
-
-#### 5. 自定义编译设置
-
-您可以根据需要添加其他选项来进一步自定义打包，例如指定 x64 和 arm64 架构，或选择不同的目标格式。
+更多命令请查看 `package.json` 文件 `scripts`
 
 ## ⭐ 支持项目
 
